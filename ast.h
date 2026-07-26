@@ -5,6 +5,8 @@ typedef enum {
   TOKEN_MINUS,
   TOKEN_STAR,
   TOKEN_SLASH,
+  TOKEN_LPAREN,
+  TOKEN_RPAREN,
   TOKEN_EOF,
 } TokenType;
 
@@ -32,3 +34,5 @@ typedef struct ASTNode {
     } binary_op;
   };
 } ASTNode;
+
+ASTNode *astparse_expression();
