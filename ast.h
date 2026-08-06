@@ -8,6 +8,8 @@ typedef enum {
   TOKEN_LPAREN,
   TOKEN_RPAREN,
   TOKEN_EOF,
+  TOKEN_ASSIGN,
+  TOKEN_IDENTIFIER,
 } TokenType;
 
 typedef struct {
@@ -17,6 +19,7 @@ typedef struct {
 
 typedef enum {
   AST_NUMBER,
+  AST_UNARY_OP,
   AST_BINARY_OP,
 } ASTNodeType;
 
@@ -25,6 +28,12 @@ typedef struct ASTNode {
   union {
     // AST_NUMBER
     int number_val;
+
+    // AST_UNARY_OP
+    struct {
+      TokenType op;
+      struct ASTNode *operand;
+    } unary_op;
 
     // AST_BINARY_OP
     struct {
@@ -35,4 +44,5 @@ typedef struct ASTNode {
   };
 } ASTNode;
 
+void astnode_free(ASTNode *node);
 ASTNode *astparse_expression();

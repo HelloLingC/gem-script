@@ -9,6 +9,14 @@ ASTNode *astnode_create_num(int val) {
   return node;
 }
 
+ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_UNARY_OP;
+  node->unary_op.op = op;
+  node->unary_op.operand = operand;
+  return node;
+}
+
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right) {
   ASTNode *node = malloc(sizeof(ASTNode));
   node->type = AST_BINARY_OP;
@@ -72,6 +80,13 @@ void advance() {
 
 ASTNode *astparse_factor() {
   printf("cu_type: %d, val: %d\n", current_token.type, current_token.value);
+
+  // Hanlde - and +
+  if (current_token.type == TOKEN_MINUS || current_token.type == TOKEN_PLUS) {
+    advance();
+    ASTNode *val = astnode_create_num(current_token.value);
+    astnode_create_unaryop(current_token.type, val);
+  }
 
   if (current_token.type == TOKEN_NUMBER) {
     ASTNode *node = astnode_create_num(current_token.value);
@@ -139,6 +154,7 @@ int evaluate(ASTNode *node) {
     case TOKEN_SLASH:
       if (right == 0) {
         printf("Runtime error: Division by zero");
+        exit(0);
       }
       return left / right;
     default:
