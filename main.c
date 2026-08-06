@@ -1,33 +1,36 @@
 #include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-ASTNode *astnode_create_num(int val) {
-  ASTNode *node = malloc(sizeof(ASTNode));
-  node->type = AST_NUMBER;
-  node->number_val = val;
-  return node;
+Value value_number(double number) {
+  Value value = {.type = VAL_NUMBER, .number = number};
+  return value;
 }
 
-ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand) {
-  ASTNode *node = malloc(sizeof(ASTNode));
-  node->type = AST_UNARY_OP;
-  node->unary_op.op = op;
-  node->unary_op.operand = operand;
-  return node;
+void env_set(Environment *env, char *name, Value val) {
+  Symbol symbol = {.val = val};
+  strncpy(symbol.name, name, 64);
+  env->symbols[env->count++] = symbol;
 }
 
-ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right) {
-  ASTNode *node = malloc(sizeof(ASTNode));
-  node->type = AST_BINARY_OP;
-  node->binary_op.op = op;
-  node->binary_op.left = left;
-  node->binary_op.right = right;
-  return node;
+bool env_get(Environment *env, char name[64], Value *ret_val) {
+  for (int i = 0; i < env->count; i++) {
+    if (strcmp(env->symbols[i].name, name) == 0) {
+      ret_val->type = env->symbols[i].val.type;
+      ret_val->number = env->symbols[i].val.number;
+      return true;
+    }
+  }
+  return false;
 }
 
 size_t is_digit(char c) { return c >= '0' && c <= '9'; }
+size_t is_vaild_identifier(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
 
+// Lexer
 Token get_next_token(const char **scpy) {
   while (1) {
     if (**scpy == ' ' || **scpy == '\n' || **scpy == '\t') {
@@ -48,16 +51,29 @@ Token get_next_token(const char **scpy) {
       return (Token){.type = TOKEN_NUMBER, .value = val};
     }
 
+    if (is_vaild_identifier(**scpy)) {
+      char buf[64];
+      size_t len = 0;
+      while (is_vaild_identifier(**scpy)) {
+        buf[len++] = **scpy;
+        (*scpy)++;
+      }
+      buf[len] = '\0';
+      Token token = {.type = TOKEN_IDENTIFIER};
+      strncpy(token.string_val, buf, 64);
+      return token;
+    }
+
     char current = **scpy;
     (*scpy)++;
 
     switch (current) {
-    case '+': {
+    case '=':
+      return (Token){.type = TOKEN_ASSIGN, .value = 0};
+    case '+':
       return (Token){.type = TOKEN_PLUS, .value = 0};
-    }
-    case '-': {
+    case '-':
       return (Token){.type = TOKEN_MINUS, .value = 0};
-    }
     case '*':
       return (Token){.type = TOKEN_STAR, .value = 0};
     case '/':
@@ -70,8 +86,9 @@ Token get_next_token(const char **scpy) {
   }
 }
 
+static Environment *env;
 static Token current_token;
-static const char *src_ptr = "(1+1)*2";
+static const char *src_ptr = "1+3 5+8+99 a=5 a";
 static size_t src_pos = 0;
 void advance() {
   current_token = get_next_token(&src_ptr);
@@ -79,8 +96,6 @@ void advance() {
 }
 
 ASTNode *astparse_factor() {
-  printf("cu_type: %d, val: %d\n", current_token.type, current_token.value);
-
   // Hanlde - and +
   if (current_token.type == TOKEN_MINUS || current_token.type == TOKEN_PLUS) {
     advance();
@@ -103,6 +118,18 @@ ASTNode *astparse_factor() {
     }
     printf("Syteax Error: Expected ')'\n");
     exit(1);
+  }
+
+  if (current_token.type == TOKEN_IDENTIFIER) {
+    char var_name[64];
+    strncpy(var_name, current_token.string_val, 64);
+    advance();
+    if (current_token.type == TOKEN_ASSIGN) {
+      advance();
+      ASTNode *expr = astparse_expression();
+      return astnode_create_assignment(var_name, expr);
+    }
+    return astnode_create_identifier(var_name);
   }
 
   printf("Syntax Error: Expected number at %zu\n", src_pos);
@@ -133,30 +160,46 @@ ASTNode *astparse_expression() {
   return left;
 }
 
-int evaluate(ASTNode *node) {
+Value evaluate(ASTNode *node) {
   if (node == NULL)
-    return 0;
+    return value_number(0);
+
+  if (node->type == AST_ASSIGNMENT) {
+    Value val = evaluate(node->assignment.expr);
+    env_set(env, node->assignment.name, val);
+    return val;
+  }
+
+  if (node->type == AST_IDENTIFIER) {
+    Value val;
+    if (env_get(env, node->identifier_name, &val)) {
+      return val;
+    }
+    printf("Runtime error: Undefined identifier: '%s'\n",
+           node->identifier_name);
+    exit(1);
+  }
 
   if (node->type == AST_NUMBER) {
-    return node->number_val;
+    return value_number(node->number_val);
   }
 
   if (node->type == AST_BINARY_OP) {
-    int left = evaluate(node->binary_op.left);
-    int right = evaluate(node->binary_op.right);
+    double left = evaluate(node->binary_op.left).number;
+    double right = evaluate(node->binary_op.right).number;
     switch (node->binary_op.op) {
     case TOKEN_PLUS:
-      return left + right;
+      return value_number(left + right);
     case TOKEN_MINUS:
-      return left - right;
+      return value_number(left - right);
     case TOKEN_STAR:
-      return left * right;
+      return value_number(left * right);
     case TOKEN_SLASH:
       if (right == 0) {
         printf("Runtime error: Division by zero");
         exit(0);
       }
-      return left / right;
+      return value_number(left / right);
     default:
       printf("Error: Unknow operator when evaluating");
       exit(0);
@@ -165,10 +208,12 @@ int evaluate(ASTNode *node) {
 }
 
 int main(void) {
+  env = malloc(sizeof(Environment));
+
   advance();
   do {
     ASTNode *node = astparse_expression();
-    printf("%d\n", evaluate(node));
+    printf("%d\n", (int)evaluate(node).number);
   } while (current_token.type != TOKEN_EOF);
   return 0;
 }

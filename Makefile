@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -std=c17
 TARGET=compiler
 
 
-OBJS = main.c
+OBJS = main.c ast.c
 HEADERS = ast.h 
 
 $(TARGET): $(OBJS)
