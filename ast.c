@@ -48,6 +48,24 @@ ASTNode *astnode_create_identifier(const char *id_name) {
   return node;
 }
 
+ASTNode *astnode_create_block(ASTNode **stmts, int count) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_BLOCK;
+  node->block.stmts = stmts;
+  node->block.count = count;
+  return node;
+}
+
+ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
+                           ASTNode *else_branch) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_IF;
+  node->if_stmt.condition = condition;
+  node->if_stmt.then_branch = then_branch;
+  node->if_stmt.else_branch = else_branch;
+  return node;
+}
+
 void astnode_free(ASTNode *node) {
   if (!node) {
     return;

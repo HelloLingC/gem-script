@@ -30,6 +30,8 @@ size_t is_vaild_identifier(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
+void advance();
+
 // Lexer
 Token get_next_token(const char **scpy) {
   while (1) {
@@ -59,8 +61,18 @@ Token get_next_token(const char **scpy) {
         (*scpy)++;
       }
       buf[len] = '\0';
-      Token token = {.type = TOKEN_IDENTIFIER};
-      strncpy(token.string_val, buf, 64);
+      Token token;
+      // Keyword
+      if (strcmp(buf, "if") == 0) {
+        token.type = TOKEN_IF;
+      } else if (strcmp(buf, "else") == 0) {
+        token.type = TOKEN_ELSE;
+      } else {
+        token.type = TOKEN_IDENTIFIER;
+        strncpy(token.string_val, buf, 64);
+        token.string_val[63] = '\0';
+      }
+
       return token;
     }
 
@@ -68,8 +80,13 @@ Token get_next_token(const char **scpy) {
     (*scpy)++;
 
     switch (current) {
-    case '=':
+    case '=': {
+      if (**scpy == '=') {
+        advance();
+        return (Token){.type = TOKEN_EQUAL};
+      }
       return (Token){.type = TOKEN_ASSIGN, .value = 0};
+    }
     case '+':
       return (Token){.type = TOKEN_PLUS, .value = 0};
     case '-':
@@ -82,20 +99,62 @@ Token get_next_token(const char **scpy) {
       return (Token){.type = TOKEN_LPAREN, .value = 0};
     case ')':
       return (Token){.type = TOKEN_RPAREN, .value = 0};
+    case '<':
+      return (Token){.type = TOKEN_LESS_THAN, .value = 0};
+    case '>':
+      return (Token){.type = TOKEN_GREATER_THAN, .value = 0};
+    case '{':
+      return (Token){.type = TOKEN_LBRACE, .value = 0};
+    case '}':
+      return (Token){.type = TOKEN_RBRACE, .value = 0};
     }
   }
 }
 
 static Environment *env;
 static Token current_token;
-static const char *src_ptr = "1+3 5+8+99 a=5 a";
+// static const char *src_ptr = "1+3 5+8+99 a=5 a";
+static const char *src_ptr = "x = 10 if x > 5 { y = 100 } else { y = 0 } y";
 static size_t src_pos = 0;
 void advance() {
   current_token = get_next_token(&src_ptr);
   src_pos++;
 }
 
+ASTNode *astparse_block() {
+  advance(); // consume '{'
+  ASTNode **stmts = malloc(sizeof(ASTNode) * 64);
+  int cnt = 0;
+  while (current_token.type != TOKEN_RBRACE &&
+         current_token.type != TOKEN_EOF) {
+    stmts[cnt++] = astparse_expression();
+  }
+  advance(); // consume '}'
+  return astnode_create_block(stmts, cnt);
+}
+
+ASTNode *astparse_if() {
+  advance(); // consume 'if'
+  ASTNode *condition = astparse_expression();
+  ASTNode *then_branch = astparse_block();
+  ASTNode *else_branch = NULL;
+  if (current_token.type == TOKEN_ELSE) {
+    advance(); // consume 'else'
+    // handle 'else if'
+    if (current_token.type == TOKEN_IF) {
+      else_branch = astparse_if();
+    } else {
+      else_branch = astparse_block();
+    }
+  }
+  return astnode_create_if(condition, then_branch, else_branch);
+}
+
 ASTNode *astparse_factor() {
+  if (current_token.type == TOKEN_IF) {
+    return astparse_if();
+  }
+
   // Hanlde - and +
   if (current_token.type == TOKEN_MINUS || current_token.type == TOKEN_PLUS) {
     advance();
@@ -151,12 +210,16 @@ ASTNode *astparse_term() {
 ASTNode *astparse_expression() {
   ASTNode *left = astparse_term();
   while (current_token.type == TOKEN_PLUS ||
-         current_token.type == TOKEN_MINUS) {
+         current_token.type == TOKEN_MINUS ||
+         current_token.type == TOKEN_LESS_THAN ||
+         current_token.type == TOKEN_GREATER_THAN ||
+         current_token.type == TOKEN_EQUAL) {
     TokenType op = current_token.type;
     advance();
     ASTNode *right = astparse_term();
     left = astnode_create_binop(op, left, right);
   }
+
   return left;
 }
 
@@ -168,6 +231,27 @@ Value evaluate(ASTNode *node) {
     Value val = evaluate(node->assignment.expr);
     env_set(env, node->assignment.name, val);
     return val;
+  }
+
+  if (node->type == AST_BLOCK) {
+    int count = node->block.count;
+    for (int i = 0; i < count; i++) {
+      ASTNode *stmt = node->block.stmts[i];
+      evaluate(stmt);
+    }
+    return evaluate(node->block.stmts[count - 1]);
+  }
+
+  if (node->type == AST_IF) {
+    Value cond = evaluate(node->if_stmt.condition);
+    bool isTrue = (cond.type == VAL_BOOL && cond.boolean) ||
+                  (cond.type == VAL_NUMBER && cond.number != 0);
+    if (isTrue) {
+      return evaluate(node->if_stmt.then_branch);
+    } else if (node->if_stmt.else_branch != NULL) {
+      return evaluate(node->if_stmt.else_branch);
+    }
+    return (Value){.type = VAL_NIL};
   }
 
   if (node->type == AST_IDENTIFIER) {
@@ -200,6 +284,12 @@ Value evaluate(ASTNode *node) {
         exit(0);
       }
       return value_number(left / right);
+    case TOKEN_LESS_THAN:
+      return (Value){.type = VAL_BOOL, .boolean = left < right};
+    case TOKEN_GREATER_THAN:
+      return (Value){.type = VAL_BOOL, .boolean = left > right};
+    case TOKEN_EQUAL:
+      return (Value){.type = VAL_BOOL, .boolean = left == right};
     default:
       printf("Error: Unknow operator when evaluating");
       exit(0);

@@ -22,6 +22,13 @@ typedef enum {
   TOKEN_EOF,
   TOKEN_ASSIGN,
   TOKEN_IDENTIFIER,
+  TOKEN_EQUAL,        // ==
+  TOKEN_LESS_THAN,    // <
+  TOKEN_GREATER_THAN, // >
+  TOKEN_LBRACE,       // {
+  TOKEN_RBRACE,       // }
+  TOKEN_IF,           // if
+  TOKEN_ELSE,         // else
 } TokenType;
 
 typedef struct {
@@ -36,6 +43,8 @@ typedef enum {
   AST_BINARY_OP,
   AST_IDENTIFIER,
   AST_ASSIGNMENT,
+  AST_IF,
+  AST_BLOCK
 } ASTNodeType;
 
 typedef struct ASTNode {
@@ -65,6 +74,19 @@ typedef struct ASTNode {
       char name[64];
       struct ASTNode *expr;
     } assignment;
+
+    // AST_BLOCK
+    struct {
+      struct ASTNode **stmts;
+      int count;
+    } block;
+
+    // AST_IF
+    struct {
+      struct ASTNode *condition;
+      struct ASTNode *then_branch;
+      struct ASTNode *else_branch; // can be null if no else
+    } if_stmt;
   };
 } ASTNode;
 
@@ -87,6 +109,9 @@ ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand);
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right);
 ASTNode *astnode_create_assignment(const char *var_name, ASTNode *expr);
 ASTNode *astnode_create_identifier(const char *id_name);
+ASTNode *astnode_create_block(ASTNode **stmts, int count);
+ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
+                           ASTNode *else_branch);
 
 ASTNode *astparse_expression();
 void astnode_free(ASTNode *node);
