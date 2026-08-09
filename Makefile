@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = -Wall -Wextra -std=c17
-TARGET = compiler
+TARGET = gem
 
 SRCS = main.c env.c ast.c lexer.c parser.c evaluator.c
 OBJS = $(SRCS:.c=.o)

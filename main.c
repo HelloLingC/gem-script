@@ -30,7 +30,7 @@ char *read_file(const char *path) {
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
-    printf("Usage: <script.gem>\n");
+    printf("Usage: gem <script.gem>\n");
     exit(1);
   }
 
