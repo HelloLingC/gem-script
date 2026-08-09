@@ -29,6 +29,7 @@ typedef enum {
   TOKEN_RBRACE,       // }
   TOKEN_IF,           // if
   TOKEN_ELSE,         // else
+  TOKEN_WHILE,
 } TokenType;
 
 typedef struct {
@@ -44,7 +45,8 @@ typedef enum {
   AST_IDENTIFIER,
   AST_ASSIGNMENT,
   AST_IF,
-  AST_BLOCK
+  AST_BLOCK,
+  AST_WHILE,
 } ASTNodeType;
 
 typedef struct ASTNode {
@@ -87,6 +89,11 @@ typedef struct ASTNode {
       struct ASTNode *then_branch;
       struct ASTNode *else_branch; // can be null if no else
     } if_stmt;
+
+    struct {
+      struct ASTNode *condition;
+      struct ASTNode *body;
+    } while_loop;
   };
 } ASTNode;
 
@@ -112,6 +119,7 @@ ASTNode *astnode_create_identifier(const char *id_name);
 ASTNode *astnode_create_block(ASTNode **stmts, int count);
 ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
                            ASTNode *else_branch);
+ASTNode *astnode_create_while(ASTNode *condition, ASTNode *body);
 
 ASTNode *astparse_expression();
 void astnode_free(ASTNode *node);

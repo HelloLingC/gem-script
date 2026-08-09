@@ -66,6 +66,14 @@ ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
   return node;
 }
 
+ASTNode *astnode_create_while(ASTNode *condition, ASTNode *body) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_WHILE;
+  node->while_loop.condition = condition;
+  node->while_loop.body = body;
+  return node;
+}
+
 void astnode_free(ASTNode *node) {
   if (!node) {
     return;

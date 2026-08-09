@@ -67,6 +67,8 @@ Token get_next_token(const char **scpy) {
         token.type = TOKEN_IF;
       } else if (strcmp(buf, "else") == 0) {
         token.type = TOKEN_ELSE;
+      } else if (strcmp(buf, "while") == 0) {
+        token.type = TOKEN_WHILE;
       } else {
         token.type = TOKEN_IDENTIFIER;
         strncpy(token.string_val, buf, 64);
@@ -150,9 +152,20 @@ ASTNode *astparse_if() {
   return astnode_create_if(condition, then_branch, else_branch);
 }
 
+ASTNode *astparse_while() {
+  advance(); // consume 'while'
+  ASTNode *condition = astparse_expression();
+  ASTNode *loop_body = astparse_block();
+  return astnode_create_while(condition, loop_body);
+}
+
 ASTNode *astparse_factor() {
   if (current_token.type == TOKEN_IF) {
     return astparse_if();
+  }
+
+  if (current_token.type == TOKEN_WHILE) {
+    return astparse_while();
   }
 
   // Hanlde - and +
@@ -252,6 +265,21 @@ Value evaluate(ASTNode *node) {
       return evaluate(node->if_stmt.else_branch);
     }
     return (Value){.type = VAL_NIL};
+  }
+
+  if (node->type == AST_WHILE) {
+    Value cond = evaluate(node->while_loop.condition);
+    bool isTrue = (cond.type == VAL_BOOL && cond.boolean) ||
+                  (cond.type == VAL_NUMBER && cond.number != 0);
+    Value last_val;
+    while (1) {
+      Value val = evaluate(node->while_loop.body);
+      if (!isTrue) {
+        last_val = val;
+        break;
+      }
+    }
+    return last_val;
   }
 
   if (node->type == AST_IDENTIFIER) {
