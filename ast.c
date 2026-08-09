@@ -27,17 +27,14 @@ ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right) {
 }
 
 /**
- * @brief Build AST node represents `name = expression`
- *
- * @param var_name
- * @param expr
- * @return ASTNode*
+ * @brief Build AST node representing `name = expression`
  */
 ASTNode *astnode_create_assignment(const char *var_name, ASTNode *expr) {
   ASTNode *node = malloc(sizeof(ASTNode));
   node->type = AST_ASSIGNMENT;
   node->assignment.expr = expr;
   strncpy(node->assignment.name, var_name, 64);
+  node->assignment.name[63] = '\0';
   return node;
 }
 
@@ -45,6 +42,7 @@ ASTNode *astnode_create_identifier(const char *id_name) {
   ASTNode *node = malloc(sizeof(ASTNode));
   node->type = AST_IDENTIFIER;
   strncpy(node->identifier_name, id_name, 64);
+  node->identifier_name[63] = '\0';
   return node;
 }
 
@@ -81,6 +79,24 @@ void astnode_free(ASTNode *node) {
   if (node->type == AST_BINARY_OP) {
     astnode_free(node->binary_op.left);
     astnode_free(node->binary_op.right);
+  } else if (node->type == AST_UNARY_OP) {
+    astnode_free(node->unary_op.operand);
+  } else if (node->type == AST_ASSIGNMENT) {
+    astnode_free(node->assignment.expr);
+  } else if (node->type == AST_BLOCK) {
+    for (int i = 0; i < node->block.count; i++) {
+      astnode_free(node->block.stmts[i]);
+    }
+    free(node->block.stmts);
+  } else if (node->type == AST_IF) {
+    astnode_free(node->if_stmt.condition);
+    astnode_free(node->if_stmt.then_branch);
+    if (node->if_stmt.else_branch) {
+      astnode_free(node->if_stmt.else_branch);
+    }
+  } else if (node->type == AST_WHILE) {
+    astnode_free(node->while_loop.condition);
+    astnode_free(node->while_loop.body);
   }
   free(node);
 }

@@ -1,42 +1,8 @@
-#include <stdbool.h>
-#include <string.h>
+#ifndef AST_H
+#define AST_H
 
-typedef enum { VAL_NIL, VAL_NUMBER, VAL_BOOL } ValueType;
-
-typedef struct {
-  ValueType type;
-  union {
-    double number;
-    bool boolean;
-  };
-} Value;
-
-typedef enum {
-  TOKEN_NUMBER,
-  TOKEN_PLUS,
-  TOKEN_MINUS,
-  TOKEN_STAR,
-  TOKEN_SLASH,
-  TOKEN_LPAREN,
-  TOKEN_RPAREN,
-  TOKEN_EOF,
-  TOKEN_ASSIGN,
-  TOKEN_IDENTIFIER,
-  TOKEN_EQUAL,        // ==
-  TOKEN_LESS_THAN,    // <
-  TOKEN_GREATER_THAN, // >
-  TOKEN_LBRACE,       // {
-  TOKEN_RBRACE,       // }
-  TOKEN_IF,           // if
-  TOKEN_ELSE,         // else
-  TOKEN_WHILE,
-} TokenType;
-
-typedef struct {
-  int value;
-  char string_val[64];
-  TokenType type;
-} Token;
+#include "token.h"
+#include "value.h"
 
 typedef enum {
   AST_NUMBER,
@@ -97,20 +63,6 @@ typedef struct ASTNode {
   };
 } ASTNode;
 
-typedef struct {
-  char name[64];
-  Value val;
-} Symbol;
-
-typedef struct Environment {
-  Symbol symbols[100];
-  int count;
-  struct Environment *pareantEnv; // For nested variable scope
-} Environment;
-
-void env_set(Environment *env, char name[64], Value val);
-bool env_get(Environment *env, char name[64], Value *ret_val);
-
 ASTNode *astnode_create_num(int val);
 ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand);
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right);
@@ -121,5 +73,6 @@ ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
                            ASTNode *else_branch);
 ASTNode *astnode_create_while(ASTNode *condition, ASTNode *body);
 
-ASTNode *astparse_expression();
 void astnode_free(ASTNode *node);
+
+#endif // AST_H
