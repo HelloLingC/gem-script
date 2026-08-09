@@ -6,13 +6,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(void) {
+char *read_file(const char *path) {
+  FILE *file = fopen(path, "rb");
+  if (!file) {
+    fprintf(stderr, "Error: Cannot open file: %s\n", path);
+    exit(74); // Standard exit code for input file error
+  }
+  fseek(file, 0, SEEK_END);
+  long fileSize = ftell(file);
+  rewind(file);
+
+  char *buf = malloc(fileSize + 1); // plus a terminator
+  if (!buf) {
+    fprintf(stderr, "Error: Unable to malloc new memory when reading file\n");
+    exit(1);
+  }
+  size_t byteRead = fread(buf, sizeof(char), fileSize, file);
+  buf[byteRead] = '\0';
+
+  fclose(file);
+  return buf;
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    printf("Usage: <script.gem>\n");
+    exit(1);
+  }
+
+  // read the argument for path for an input file
+  if (argv[1] == NULL) {
+    printf("Error: no input file\n");
+    exit(1);
+  }
+
+  const char *code = read_file(argv[1]);
+
   Environment *env = malloc(sizeof(Environment));
   env->count = 0;
   env->pareantEnv = NULL;
 
-  const char *src_ptr = "x = 10 if x > 5 { y = 100 } else { y = 0 } y";
-  lexer_init(src_ptr);
+  lexer_init(code);
 
   advance();
   do {
@@ -21,6 +55,7 @@ int main(void) {
     astnode_free(node);
   } while (current_token.type != TOKEN_EOF);
 
+  free((void *)code);
   free(env);
   return 0;
 }
