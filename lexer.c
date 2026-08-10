@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 Token current_token;
@@ -40,6 +41,27 @@ Token get_next_token(const char **scpy) {
       return (Token){.type = TOKEN_NUMBER, .value = val};
     }
 
+    // string lexing
+    if (**scpy == '\"') {
+      (*scpy)++; // consume start quote
+      const char *start = *scpy;
+
+      while (**scpy != '\"' && **scpy != '\0') {
+        (*scpy)++;
+      }
+
+      size_t len = *scpy - start;
+      char *buf = malloc(len + 1);
+      memcpy(buf, start, len);
+      buf[len] = '\0';
+
+      if (**scpy == '\"') {
+        (*scpy)++; // consume end quote
+      }
+
+      return (Token){.type = TOKEN_STRING, .string_val = buf};
+    }
+
     if (is_vaild_identifier(**scpy)) {
       char buf[64];
       size_t len = 0;
@@ -56,10 +78,14 @@ Token get_next_token(const char **scpy) {
         token.type = TOKEN_ELSE;
       } else if (strcmp(buf, "while") == 0) {
         token.type = TOKEN_WHILE;
+      } else if (strcmp(buf, "true") == 0) {
+        return (Token){.type = TOKEN_TRUE, .value = 1};
+      } else if (strcmp(buf, "false") == 0) {
+        return (Token){.type = TOKEN_FALSE, .value = 1};
       } else {
         token.type = TOKEN_IDENTIFIER;
-        strncpy(token.string_val, buf, 64);
-        token.string_val[63] = '\0';
+        token.string_val = malloc(sizeof(len + 1));
+        memcpy(token.string_val, buf, len + 1);
       }
 
       return token;

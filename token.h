@@ -3,6 +3,9 @@
 
 typedef enum {
   TOKEN_NUMBER,
+  TOKEN_TRUE,
+  TOKEN_FALSE,
+  TOKEN_STRING,
   TOKEN_PLUS,
   TOKEN_MINUS,
   TOKEN_STAR,
@@ -24,7 +27,11 @@ typedef enum {
 
 typedef struct {
   int value;
-  char string_val[64];
+
+  /** string_val can be either Identifier(Variable name) or String literal
+  when it's an identifier, the size is fixed 64-char array
+  */
+  char *string_val;
   TokenType type;
 } Token;
 

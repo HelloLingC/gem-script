@@ -18,7 +18,7 @@ Currently, `gem-script` features:
 ### Milestone 1: Language & Frontend Enhancements
 Before compiling to Bytecode or LLVM IR, the language constructs need to support modular code execution (functions & types).
 
-- [ ] **1.1 Boolean & String Literals**
+- [X] **1.1 Boolean & String Literals**
   - Add `TOKEN_TRUE`, `TOKEN_FALSE`, `TOKEN_STRING` to `lexer`.
   - Extend `Value` tagged union to support strings (`ObjString *` or dynamic string buffer).
 - [ ] **1.2 Function Support (`fn` & Return)**

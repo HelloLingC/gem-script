@@ -6,6 +6,7 @@
 
 typedef enum {
   AST_NUMBER,
+  AST_STRING,
   AST_UNARY_OP,
   AST_BINARY_OP,
   AST_IDENTIFIER,
@@ -20,6 +21,8 @@ typedef struct ASTNode {
   union {
     // AST_NUMBER
     int number_val;
+    // AST_STRING
+    char *string;
 
     // AST_UNARY_OP
     struct {
@@ -64,6 +67,7 @@ typedef struct ASTNode {
 } ASTNode;
 
 ASTNode *astnode_create_num(int val);
+ASTNode *astnode_create_string(const char *string);
 ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand);
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right);
 ASTNode *astnode_create_assignment(const char *var_name, ASTNode *expr);

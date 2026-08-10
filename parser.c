@@ -62,6 +62,12 @@ ASTNode *astparse_factor(void) {
     return node;
   }
 
+  if (current_token.type == TOKEN_STRING) {
+    ASTNode *node = astnode_create_string(current_token.string_val);
+    advance();
+    return node;
+  }
+
   if (current_token.type == TOKEN_LPAREN) {
     advance();
     ASTNode *node = astparse_expression();
@@ -84,6 +90,10 @@ ASTNode *astparse_factor(void) {
       return astnode_create_assignment(var_name, expr);
     }
     return astnode_create_identifier(var_name);
+  }
+
+  if (current_token.type == TOKEN_STRING) {
+    printf("String: %s\n", current_token.string_val);
   }
 
   printf("Syntax Error: Expected number at %zu\n", src_pos);

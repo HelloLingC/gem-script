@@ -6,6 +6,16 @@ Value value_number(double number) {
   return value;
 }
 
+Value value_bool(bool boolean) {
+  Value value = {.type = VAL_STRING, .boolean = boolean};
+  return value;
+}
+
+Value value_string(char *string) {
+  Value value = {.type = VAL_STRING, .string = string};
+  return value;
+}
+
 void env_set(Environment *env, char *name, Value val) {
   Symbol symbol = {.val = val};
   strncpy(symbol.name, name, 64);

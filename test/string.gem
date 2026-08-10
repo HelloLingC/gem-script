@@ -1,0 +1,8 @@
+a = "Welcome to GEMSCITPT
+
+String operations
+
+Test
+"
+
+print(a)

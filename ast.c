@@ -9,6 +9,13 @@ ASTNode *astnode_create_num(int val) {
   return node;
 }
 
+ASTNode *astnode_create_string(const char *string) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_STRING;
+  node->string = string;
+  return node;
+}
+
 ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand) {
   ASTNode *node = malloc(sizeof(ASTNode));
   node->type = AST_UNARY_OP;

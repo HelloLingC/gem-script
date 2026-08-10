@@ -65,6 +65,10 @@ Value evaluate(ASTNode *node, Environment *env) {
     return value_number(node->number_val);
   }
 
+  if (node->type == AST_STRING) {
+    return value_string(node->string);
+  }
+
   if (node->type == AST_BINARY_OP) {
     double left = evaluate(node->binary_op.left, env).number;
     double right = evaluate(node->binary_op.right, env).number;
