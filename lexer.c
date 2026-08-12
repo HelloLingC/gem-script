@@ -5,7 +5,7 @@
 
 Token current_token;
 size_t src_pos = 0;
-static const char *src_ptr = NULL;
+const char *src_ptr = NULL;
 
 static size_t is_digit(char c) { return c >= '0' && c <= '9'; }
 static size_t is_vaild_identifier(char c) {
@@ -82,6 +82,12 @@ Token get_next_token(const char **scpy) {
         return (Token){.type = TOKEN_TRUE, .value = 1};
       } else if (strcmp(buf, "false") == 0) {
         return (Token){.type = TOKEN_FALSE, .value = 1};
+      } else if (strcmp(buf, "let") == 0) {
+        token.type = TOKEN_LET;
+      } else if (strcmp(buf, "fn") == 0) {
+        token.type = TOKEN_FN;
+      } else if (strcmp(buf, "return") == 0) {
+        token.type = TOKEN_RETURN;
       } else {
         token.type = TOKEN_IDENTIFIER;
         token.string_val = malloc(sizeof(len + 1));
@@ -122,6 +128,10 @@ Token get_next_token(const char **scpy) {
       return (Token){.type = TOKEN_LBRACE, .value = 0};
     case '}':
       return (Token){.type = TOKEN_RBRACE, .value = 0};
+    case ',':
+      return (Token){.type = TOKEN_COMMA, .value = 0};
+    case ':':
+      return (Token){.type = TOKEN_COLON, .value = 0};
     }
   }
 }

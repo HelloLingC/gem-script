@@ -1,5 +1,7 @@
 #include "parser.h"
+#include "ast.h"
 #include "lexer.h"
+#include "token.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +16,52 @@ ASTNode *astparse_block(void) {
   }
   advance(); // consume '}'
   return astnode_create_block(stmts, cnt);
+}
+
+ASTNode *astparse_function_decl(void) {
+  ASTNode *identifier = astparse_factor();
+  printf("FUNC: %s\n", identifier->identifier_name);
+  if (current_token.type != TOKEN_LPAREN) {
+    fprintf(stderr, "Syntax Error: function declaration: %d\n",
+            current_token.type);
+    exit(1);
+  }
+  advance();
+  FuncParam parsed_params[16];
+  int param_count = 0;
+  // parse function params
+  while (current_token.type != TOKEN_RPAREN &&
+         current_token.type != TOKEN_EOF) {
+    if (current_token.type != TOKEN_IDENTIFIER) {
+      fprintf(stderr, "Syntax Error: function with no identifier.\n");
+      exit(1);
+    }
+
+    char *arg_name = current_token.string_val;
+    memcpy(parsed_params[param_count].name, arg_name, 64);
+    advance();
+    if (current_token.type != TOKEN_COLON) {
+      fprintf(stderr, "Syntax Error: function argument with no colon\n");
+      exit(1);
+    }
+    advance(); // consume ':'
+
+    char *type = current_token.string_val;
+    memcpy(parsed_params[param_count].type, type, 64);
+    advance();
+
+    param_count++;
+  }
+  advance(); // consume ')'
+
+  // parse return value. if no ": type" which means the
+  // function return void
+  if (current_token.type == TOKEN_COLON) {
+  }
+
+  ASTNode *body = astparse_block();
+  return astnode_create_function_decl(identifier->identifier_name,
+                                      parsed_params, param_count, body);
 }
 
 ASTNode *astparse_if(void) {
@@ -79,6 +127,28 @@ ASTNode *astparse_factor(void) {
     exit(1);
   }
 
+  // variable assignment
+  if (current_token.type == TOKEN_LET) {
+    advance();
+    if (current_token.type == TOKEN_IDENTIFIER) {
+      char var_name[64];
+      strncpy(var_name, current_token.string_val, 64);
+      var_name[63] = '\0';
+      advance();
+      if (current_token.type == TOKEN_ASSIGN) {
+        advance();
+        ASTNode *expr = astparse_expression();
+        return astnode_create_assignment(var_name, expr);
+      }
+    }
+  }
+
+  if (current_token.type == TOKEN_FN) {
+    advance();
+    return astparse_function_decl();
+  }
+
+  // variable reassignment TODO: OwO
   if (current_token.type == TOKEN_IDENTIFIER) {
     char var_name[64];
     strncpy(var_name, current_token.string_val, 64);
@@ -89,6 +159,9 @@ ASTNode *astparse_factor(void) {
       ASTNode *expr = astparse_expression();
       return astnode_create_assignment(var_name, expr);
     }
+    // function call
+    if (current_token.type == TOKEN_LPAREN) {
+    }
     return astnode_create_identifier(var_name);
   }
 
@@ -96,7 +169,8 @@ ASTNode *astparse_factor(void) {
     printf("String: %s\n", current_token.string_val);
   }
 
-  printf("Syntax Error: Expected number at %zu\n", src_pos);
+  printf("Syntax Error:  at %zu, %c, type:%d\n", src_pos, src_ptr[src_pos],
+         current_token.type);
   exit(1);
 }
 

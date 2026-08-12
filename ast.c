@@ -9,7 +9,7 @@ ASTNode *astnode_create_num(int val) {
   return node;
 }
 
-ASTNode *astnode_create_string(const char *string) {
+ASTNode *astnode_create_string(char *string) {
   ASTNode *node = malloc(sizeof(ASTNode));
   node->type = AST_STRING;
   node->string = string;
@@ -76,6 +76,17 @@ ASTNode *astnode_create_while(ASTNode *condition, ASTNode *body) {
   node->type = AST_WHILE;
   node->while_loop.condition = condition;
   node->while_loop.body = body;
+  return node;
+}
+
+ASTNode *astnode_create_function_decl(char *func_name, FuncParam params[16],
+                                      int param_count, struct ASTNode *body) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_FUNCTION_DECL;
+  node->function_decl.func_name = func_name;
+  memcpy(node->function_decl.params, params, 16);
+  node->function_decl.params_count = param_count;
+  node->function_decl.body = body;
   return node;
 }
 

@@ -14,7 +14,15 @@ typedef enum {
   AST_IF,
   AST_BLOCK,
   AST_WHILE,
+  AST_FUNCTION_DECL,
+  AST_CALL,
+  AST_RETURN,
 } ASTNodeType;
+
+typedef struct {
+  char name[64];
+  char type[64];
+} FuncParam;
 
 typedef struct ASTNode {
   ASTNodeType type;
@@ -63,11 +71,24 @@ typedef struct ASTNode {
       struct ASTNode *condition;
       struct ASTNode *body;
     } while_loop;
+
+    struct {
+      char *func_name;      // function name
+      FuncParam params[16]; // function args
+      int params_count;
+      struct ASTNode *body;
+    } function_decl;
+
+    struct {
+      char *func_name; // func name
+      FuncParam arguments[16];
+      int arg_count;
+    } call;
   };
 } ASTNode;
 
 ASTNode *astnode_create_num(int val);
-ASTNode *astnode_create_string(const char *string);
+ASTNode *astnode_create_string(char *string);
 ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand);
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right);
 ASTNode *astnode_create_assignment(const char *var_name, ASTNode *expr);
@@ -76,6 +97,8 @@ ASTNode *astnode_create_block(ASTNode **stmts, int count);
 ASTNode *astnode_create_if(ASTNode *condition, ASTNode *then_branch,
                            ASTNode *else_branch);
 ASTNode *astnode_create_while(ASTNode *condition, ASTNode *body);
+ASTNode *astnode_create_function_decl(char *func_name, FuncParam params[16],
+                                      int param_count, struct ASTNode *body);
 
 void astnode_free(ASTNode *node);
 

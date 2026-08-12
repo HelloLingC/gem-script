@@ -1,6 +1,6 @@
 # gem-script Roadmap & Implementation Todo List
 
-Welcome to the development roadmap for **gem-script**! This document outlines the step-by-step plan to evolve `gem-script` from a simple AST tree-walking interpreter into a high-performance **Bytecode Virtual Machine** and explore an **LLVM JIT/AOT Backend**.
+Welcome to the development roadmap for **gem-script**! This document outlines the step-by-step plan to evolve `gem-script` from a simple AST tree-walking interpreter into a high-performance **Bytecode Virtual Machine**.
 
 ---
 
@@ -57,28 +57,10 @@ A virtual machine replaces tree-walking evaluation with a compact linear bytecod
 
 ---
 
-### Milestone 3: LLVM Backend Integration (JIT & AOT Code Generation)
-Instead of running bytecode in an interpreter loop, compile `gem-script` AST down to **LLVM IR** to leverage LLVM's optimizer and native machine code generator.
-
-- [ ] **3.1 Build System & LLVM Toolchain Setup**
-  - Update `Makefile` to detect LLVM C API flags (`llvm-config --cflags --ldflags --libs`).
-  - Create `llvm_backend.h` and `llvm_backend.c`.
-- [ ] **3.2 LLVM IR Code Generation (`codegen`)**
-  - Initialize `LLVMModuleRef`, `LLVMBuilderRef`, and `LLVMContextRef`.
-  - Codegen for primitive expressions: Map numbers to double/int LLVM constants, arithmetic to `LLVMBuildFAdd`, `LLVMBuildFMul`, etc.
-  - Codegen for Control Flow: Generate LLVM Basic Blocks (`LLVMAppendBasicBlock`), conditional branching (`LLVMBuildCondBr`), and phi nodes (`LLVMBuildPhi`).
-  - Codegen for Functions: Lower `gem` functions to native LLVM `LLVMAddFunction`.
-- [ ] **3.3 Execution Engine (JIT Execution)**
-  - Use `LLVMCreateExecutionEngineForModule` (or ORC JIT) to compile IR to native machine instructions in memory and run `main()`.
-- [ ] **3.4 Ahead-Of-Time (AOT) Object File Emission**
-  - Emit `.o` target object files using LLVM TargetMachine for native binary compilation.
-
----
-
-### Milestone 4: Memory Management & Garbage Collection
-- [ ] **4.1 Dynamic Object Model (`Obj`)**
+### Milestone 3: Memory Management & Garbage Collection
+- [ ] **3.1 Dynamic Object Model (`Obj`)**
   - Struct hierarchy for heap-allocated items: Strings, Functions, Closures.
-- [ ] **4.2 Mark-and-Sweep Garbage Collector (`memory.c`)**
+- [ ] **3.2 Mark-and-Sweep Garbage Collector (`memory.c`)**
   - Mark Phase: Trace roots from VM stack, global table, and active call frames.
   - Sweep Phase: Reclaim un-marked heap objects.
 

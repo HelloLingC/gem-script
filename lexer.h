@@ -6,6 +6,7 @@
 
 extern Token current_token;
 extern size_t src_pos;
+extern const char *src_ptr;
 
 void lexer_init(const char *src);
 Token get_next_token(const char **scpy);

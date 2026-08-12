@@ -13,6 +13,7 @@ typedef enum {
   TOKEN_LPAREN,
   TOKEN_RPAREN,
   TOKEN_EOF,
+  TOKEN_LET,
   TOKEN_ASSIGN,
   TOKEN_IDENTIFIER,
   TOKEN_EQUAL,        // ==
@@ -23,6 +24,11 @@ typedef enum {
   TOKEN_IF,           // if
   TOKEN_ELSE,         // else
   TOKEN_WHILE,
+
+  TOKEN_FN, // func
+  TOKEN_RETURN,
+  TOKEN_COMMA,
+  TOKEN_COLON,
 } TokenType;
 
 typedef struct {
