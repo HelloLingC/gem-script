@@ -21,6 +21,16 @@ typedef struct {
   };
 } Value;
 
+typedef struct {
+  Value *values;
+  int count;
+  int capacity;
+} ValueArray;
+
+void valuearray_init(ValueArray *va);
+void valuearray_write(ValueArray *va, Value value);
+void valuearray_free(ValueArray *va);
+
 Value value_number(double number);
 Value value_bool(bool boolean);
 Value value_string(char *string);

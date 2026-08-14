@@ -2,9 +2,9 @@ CC = clang
 CFLAGS = -Wall -Wextra -std=c17
 TARGET = gem
 
-SRCS = main.c env.c ast.c lexer.c parser.c evaluator.c
+SRCS = main.c env.c ast.c lexer.c parser.c evaluator.c vm.c value.c compiler.c
 OBJS = $(SRCS:.c=.o)
-HEADERS = value.h env.h token.h ast.h lexer.h parser.h evaluator.h
+HEADERS = value.h env.h token.h ast.h lexer.h parser.h evaluator.h vm.h
 
 all: $(TARGET)
 

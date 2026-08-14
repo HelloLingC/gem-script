@@ -1,6 +1,6 @@
 #include "ast.h"
+#include "compiler.h"
 #include "env.h"
-#include "evaluator.h"
 #include "lexer.h"
 #include "parser.h"
 #include <stdio.h>
@@ -51,11 +51,21 @@ int main(int argc, char *argv[]) {
   advance();
   do {
     ASTNode *node = astparse_expression();
-    printf("%d\n", (int)evaluate(node, env).number);
+    Chunk chunk;
+    chunk_init(&chunk);
+    compile(node, &chunk);
+    chunk_write(&chunk, OP_RETURN);
+
+    VM vm;
+    vm_init(&vm);
+    vm_interpret(&vm, &chunk);
+
+    chunk_free(&chunk);
     astnode_free(node);
   } while (current_token.type != TOKEN_EOF);
 
   free((void *)code);
   free(env);
+
   return 0;
 }
