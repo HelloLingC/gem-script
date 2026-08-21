@@ -11,6 +11,7 @@ typedef enum {
   OP_DIV,
   OP_MUL,
   OP_NAGTIVE, // for unary -
+  OP_DEFINE_GLOBAL,
   OP_SET_GLOBAL,
   OP_GET_GLOBAL,
   OP_RETURN,

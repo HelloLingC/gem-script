@@ -28,6 +28,14 @@ void compile(ASTNode *node, Chunk *chunk) {
     exit(1);
   }
 
+  if (node->type == AST_VAR_DECL) {
+    compile(node->assignment.expr, chunk);
+    size_t nameIdx =
+        chunk_constant_add(chunk, value_string(node->assignment.name));
+    chunk_write(chunk, OP_DEFINE_GLOBAL);
+    chunk_write(chunk, nameIdx);
+  }
+
   if (node->type == AST_ASSIGNMENT) {
     compile(node->assignment.expr, chunk);
     size_t nameIdx =

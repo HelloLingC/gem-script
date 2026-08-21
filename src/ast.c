@@ -33,6 +33,15 @@ ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right) {
   return node;
 }
 
+ASTNode *astnode_create_var_decl(const char *var_name, ASTNode *expr) {
+  ASTNode *node = malloc(sizeof(ASTNode));
+  node->type = AST_VAR_DECL;
+  node->assignment.expr = expr;
+  strncpy(node->assignment.name, var_name, 64);
+  node->assignment.name[63] = '\0';
+  return node;
+}
+
 /**
  * @brief Build AST node representing `name = expression`
  */
@@ -99,6 +108,8 @@ void astnode_free(ASTNode *node) {
     astnode_free(node->binary_op.right);
   } else if (node->type == AST_UNARY_OP) {
     astnode_free(node->unary_op.operand);
+  } else if (node->type == AST_VAR_DECL) {
+    astnode_free(node->assignment.expr);
   } else if (node->type == AST_ASSIGNMENT) {
     astnode_free(node->assignment.expr);
   } else if (node->type == AST_BLOCK) {

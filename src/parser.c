@@ -127,7 +127,7 @@ ASTNode *astparse_factor(void) {
     exit(1);
   }
 
-  // variable assignment
+  // variable declaration
   if (current_token.type == TOKEN_LET) {
     advance();
     if (current_token.type == TOKEN_IDENTIFIER) {
@@ -138,7 +138,7 @@ ASTNode *astparse_factor(void) {
       if (current_token.type == TOKEN_ASSIGN) {
         advance();
         ASTNode *expr = astparse_expression();
-        return astnode_create_assignment(var_name, expr);
+        return astnode_create_var_decl(var_name, expr);
       }
     }
   }
@@ -148,7 +148,7 @@ ASTNode *astparse_factor(void) {
     return astparse_function_decl();
   }
 
-  // variable reassignment TODO: OwO
+  // variable reassignment
   if (current_token.type == TOKEN_IDENTIFIER) {
     char var_name[64];
     strncpy(var_name, current_token.string_val, 64);

@@ -15,7 +15,8 @@ typedef struct Environment {
   struct Environment *pareantEnv; // For nested variable scope
 } Environment;
 
-void env_set(Environment *env, char *name, Value val);
+void env_define(Environment *env, char *name, Value val);
+bool env_assign(Environment *env, char *name, Value val);
 bool env_get(Environment *env, char name[64], Value *ret_val);
 
 #endif // ENV_H

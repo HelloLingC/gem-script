@@ -10,6 +10,7 @@ typedef enum {
   AST_UNARY_OP,
   AST_BINARY_OP,
   AST_IDENTIFIER,
+  AST_VAR_DECL,
   AST_ASSIGNMENT,
   AST_IF,
   AST_BLOCK,
@@ -91,6 +92,7 @@ ASTNode *astnode_create_num(int val);
 ASTNode *astnode_create_string(char *string);
 ASTNode *astnode_create_unaryop(TokenType op, ASTNode *operand);
 ASTNode *astnode_create_binop(TokenType op, ASTNode *left, ASTNode *right);
+ASTNode *astnode_create_var_decl(const char *var_name, ASTNode *expr);
 ASTNode *astnode_create_assignment(const char *var_name, ASTNode *expr);
 ASTNode *astnode_create_identifier(const char *id_name);
 ASTNode *astnode_create_block(ASTNode **stmts, int count);

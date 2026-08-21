@@ -155,12 +155,24 @@ void vm_run(VM *vm) {
       vm_push(vm, value_bool(a.number < b.number));
       break;
     }
+    case OP_DEFINE_GLOBAL: {
+      uint8_t nameIdx = *vm->ip++;
+      Value nameVal = vm->chunk->constants.values[nameIdx];
+      // Value val = vm_pop(vm);
+      Value val = *(vm->stackTop - 1);
+      env_define(&vm->globals, nameVal.string, val);
+      break;
+    }
     case OP_SET_GLOBAL: {
       uint8_t nameIdx = *vm->ip++;
       Value nameVal = vm->chunk->constants.values[nameIdx];
       // Value val = vm_pop(vm);
       Value val = *(vm->stackTop - 1);
-      env_set(&vm->globals, nameVal.string, val);
+      bool res = env_assign(&vm->globals, nameVal.string, val);
+      if (!res) {
+        fprintf(stderr, "Runtime Error: VM: assign\n");
+        exit(1);
+      }
       break;
     }
     case OP_GET_GLOBAL: {
