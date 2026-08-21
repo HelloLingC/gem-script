@@ -9,7 +9,7 @@ void chunk_init(Chunk *chunk) {
   chunk->capacity = 16;
   chunk->code = malloc(sizeof(uint8_t) * chunk->capacity);
   if (!chunk->code) {
-    fprintf(stderr, "Error: Cannot allocate memory for chunk");
+    fprintf(stderr, "Error: Cannot allocate memory for chunk\n");
     exit(1);
   }
   ValueArray valueArray;
@@ -71,6 +71,8 @@ void chunk_bytecode_disassemble(Chunk *chunk) {
 void vm_init(VM *vm) {
   vm->stackTop = vm->stack;
   vm->chunkCount = 0;
+  vm->globals.count = 0;
+  vm->globals.pareantEnv = NULL;
 }
 
 void vm_interpret(VM *vm, Chunk *chunk) {
@@ -135,10 +137,78 @@ void vm_run(VM *vm) {
       vm_push(vm, value_number(-a.number));
       break;
     }
+    case OP_GREATER: {
+      Value b = vm_pop(vm);
+      Value a = vm_pop(vm);
+      vm_push(vm, value_bool(a.number > b.number));
+      break;
+    }
+    case OP_EQUAL: {
+      Value b = vm_pop(vm);
+      Value a = vm_pop(vm);
+      vm_push(vm, value_bool(a.number == b.number));
+      break;
+    }
+    case OP_LESS: {
+      Value b = vm_pop(vm);
+      Value a = vm_pop(vm);
+      vm_push(vm, value_bool(a.number < b.number));
+      break;
+    }
+    case OP_SET_GLOBAL: {
+      uint8_t nameIdx = *vm->ip++;
+      Value nameVal = vm->chunk->constants.values[nameIdx];
+      // Value val = vm_pop(vm);
+      Value val = *(vm->stackTop - 1);
+      env_set(&vm->globals, nameVal.string, val);
+      break;
+    }
+    case OP_GET_GLOBAL: {
+      uint8_t nameIdx = *vm->ip++;
+      Value nameVal = vm->chunk->constants.values[nameIdx];
+      Value val;
+      if (!env_get(&vm->globals, nameVal.string, &val)) {
+        fprintf(stderr, "Runtime Error: VM: Undefined variable: %s\n",
+                nameVal.string);
+        exit(1);
+      }
+      vm_push(vm, val);
+      break;
+    }
+    case OP_JUMP_IF_FALSE: {
+      // Read 16-bit offset | big-endian high byte first
+      uint16_t offset = *vm->ip++ << 8;
+      offset |= *vm->ip++;
+      Value condition = vm_pop(vm);
+      // jump if condition is false
+      if ((condition.type == VAL_BOOL && !condition.boolean) ||
+          (condition.type == VAL_NUMBER && condition.number == 0)) {
+        vm->ip += offset;
+      }
+      break;
+    }
+    case OP_JUMP: {
+      uint16_t offset = *vm->ip++ << 8;
+      offset |= *vm->ip++;
+      vm->ip += offset;
+      break;
+    }
+    case OP_LOOP: {
+      uint16_t offset = *vm->ip++ << 8;
+      offset |= *vm->ip++;
+      vm->ip -= offset;
+      break;
+    }
     case OP_RETURN: {
       Value pop = vm_pop(vm);
       printf("VM: POP: %f\n", pop.number);
+      // printf("VM End\n")
       return;
+    }
+    default: {
+      fprintf(stderr, "Runtime Error: VM: Unknown instruction: %d\n",
+              instruction);
+      exit(1);
     }
     }
   }

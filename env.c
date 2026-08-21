@@ -7,7 +7,7 @@ Value value_number(double number) {
 }
 
 Value value_bool(bool boolean) {
-  Value value = {.type = VAL_STRING, .boolean = boolean};
+  Value value = {.type = VAL_BOOL, .boolean = boolean};
   return value;
 }
 

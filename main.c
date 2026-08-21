@@ -42,13 +42,16 @@ int main(int argc, char *argv[]) {
 
   const char *code = read_file(argv[1]);
 
+  VM vm;
+  vm_init(&vm);
+
   Environment *env = malloc(sizeof(Environment));
   env->count = 0;
   env->pareantEnv = NULL;
 
   lexer_init(code);
-
   advance();
+
   do {
     ASTNode *node = astparse_expression();
     Chunk chunk;
@@ -56,8 +59,6 @@ int main(int argc, char *argv[]) {
     compile(node, &chunk);
     chunk_write(&chunk, OP_RETURN);
 
-    VM vm;
-    vm_init(&vm);
     vm_interpret(&vm, &chunk);
 
     chunk_free(&chunk);
